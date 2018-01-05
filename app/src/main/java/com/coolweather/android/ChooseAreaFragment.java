@@ -1,6 +1,7 @@
 package com.coolweather.android;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -34,10 +35,10 @@ import okhttp3.Response;
  */
 
 public class ChooseAreaFragment extends Fragment{
+    private static final String TAG = "ChooseAreaFragment";
     public static final int LEVEL_PROVINCE = 0;
     public static final int LEVEL_CITY = 1;
     public static final int LEVEL_COUNTY = 2;
-
     private ProgressDialog progressDialog;
     private TextView titleText;
     private Button backButton;
@@ -74,9 +75,23 @@ public class ChooseAreaFragment extends Fragment{
                 } else if (currentLevel == LEVEL_CITY) {
                     selectedCity = cityList.get(position);
                     queryCounties();
+                    }else if (currentLevel ==LEVEL_COUNTY) {
+                    String weatherId = countyList.get(position).getWeatherId();
+                    if (getActivity() instanceof MainActivity) {
+                        Intent intent = new Intent(getActivity(),WeatherActivity.class);
+                        intent.putExtra("weather_id",weatherId);
+                        startActivity(intent);
+                        getActivity().finish();
+                }else if (getActivity() instanceof WeatherActivity) {
+                        WeatherActivity activity = (WeatherActivity) getActivity();
+                        activity.drawerLayout.closeDrawers();
+                        activity.swipeRefresh.setRefreshing(true);
+                        activity.requestWeather(weatherId);
                     }
+                }
             }
         });
+
         backButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -122,13 +137,12 @@ public class ChooseAreaFragment extends Fragment{
             currentLevel = LEVEL_CITY;
         } else {
             int provinceCode = selectedProvince.getProvinceCode();
+            int cityCode = selectedCity.getCityCode();
             String address = "http://guolin.tech/api/china/" + provinceCode;
-            queryFromServer(address, "city");
+            queryFromSever(address, "city");
         }
         }
 
-    private void queryFromServer(String address, String city) {
-    }
 
     private void queryCounties() {
         titleText.setText(selectedCity.getCityName());
@@ -146,7 +160,7 @@ public class ChooseAreaFragment extends Fragment{
             int provinceCode = selectedProvince.getProvinceCode();
             int cityCode = selectedCity.getCityCode();
             String address = "http://guolin.tech/api/china/" + provinceCode + "/" + cityCode;
-            queryFromServer(address, "county");
+            queryFromSever(address, "county");
         }
     }
 
